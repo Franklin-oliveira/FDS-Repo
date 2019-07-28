@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block content %}
+  <div class="jumbo">
+<h2>Welcome to Google Scholar Networkx<h2>
+    <h3>It's a web scrapping application that generates a network with google scholar's profile information on the author searched in the button bellow. <br>  <br>Give it a try...<h3>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<form class="example" action="/scrape", method="post">
+  <input type="text" placeholder="Search author..." name="author">
+  <button type="submit"><i class="fa fa-search"></i></button>
+</form>
+</div>
+{% endblock %}
+
+
