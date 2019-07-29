@@ -20,6 +20,7 @@ import os
 import sys
 import bs4
 import time
+import zipfile
 import urllib.request as request
 
 from IPython.display import clear_output
@@ -64,6 +65,7 @@ def get_chrome_version(platform='unknown'):
     Retorna:
         - tupla: (versão_completa, nº da versão - 2 primeiros digitos)
     '''
+    # ex. of url: https://chromedriver.storage.googleapis.com/74.0.3729.6/chromedriver_mac64.zip
     # platform list
     plat_list = ['macos', 'windows', 'linux']
     
@@ -73,25 +75,30 @@ def get_chrome_version(platform='unknown'):
         platform = sys.platform
         print('Done!')
     
-    if platform.lower() == 'linux':
+    if platform.lower().startswith('linux'):
         print('Getting chrome version...')
-        version_full = get_ipython().getoutput('google-chrome --version')
+        version_full = str(os.popen('google-chrome --version').read()).replace('\n','')
+        version_full = version_full.strip().split(' ')[-1]
         print('Done!')
     
-    if platform.lower() == 'macos':
+    if platform.lower().startswith('darwin') or platform.lower().startswith('mac'):
         print('Getting chrome version...')
-        version_full = get_ipython().getoutput('/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --version')
+        version_full = str(os.popen('/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --version').read()).replace('\n','')
+        version_full = version_full.strip().split(' ')[-1]
         print('Done!')
     
-    if platform.lower() == 'windows':
+    if platform.lower().startswith('win'):
         print('Getting chrome version...')
-        version_full = get_ipython().getoutput('reg query "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Google Chrome" /v DisplayVersion')
+        version_full = str(os.popen('reg query "HKEY_CURRENT_USER\Software\Google\Chrome\BLBeacon" /v version').read()).replace('\n','')
+        version_full = version_full.split(' ')[-1]
         print('Done!')
     
     time.sleep(1)
-    clear_output()
-    print('Your chrome version is {}'.format(version_full[0].split()[-1]))
-    version_number = version_full[0].split()[-1][:2]
+    #clear_output()
+    
+    version_number = version_full.split('.')[0]
+    print('Your chrome version is {}'.format(version_full))
+    
     
     return version_full,version_number
 
@@ -129,34 +136,46 @@ def download_chrome_driver(platform,version_number):
         version2down = '73.0.3683.68'
     
     else:
-        print('Check your chrome version manually and download the correct driver at:\n         https://sites.google.com/a/chromium.org/chromedriver/downloads')
+        print('Check your chrome version manually and download the correct driver at:\n \
+        https://sites.google.com/a/chromium.org/chromedriver/downloads')
         return None
     
     # platform info
-    if platform.lower() == 'linux':
+    if platform.lower().startswith('linux'):
         try:
             request.urlretrieve(url.format(version2down,'linux64'), filename='chromedriver_linux64.zip')
             print('chromedriver downloaded at {}'.format(path))
-            print('Please unzip it before continuing.')
+            
+            with zipfile.ZipFile('{}/{}'.format(os.getcwd(),'chromedriver_linux64.zip'), 'r') as zip_ref:
+                zip_ref.extractall('{}'.format(os.getcwd()))
         except:
-            print('Download failed. Please try again or access             https://sites.google.com/a/chromium.org/chromedriver/downloads             to download it manually.')
+            print('Download failed. Please try again or access \
+            https://sites.google.com/a/chromium.org/chromedriver/downloads \
+            to download it manually.')
     
-    elif platform.lower() == 'macos':
+    elif platform.lower().startswith('darwin') or platform.lower().startswith('mac'):
         try:
             request.urlretrieve(url.format(version2down,'mac64'),filename='chromedriver_mac64.zip')
             print('chromedriver downloaded at {}'.format(path))
-            print('Please unzip it before continuing.')
+            
+            with zipfile.ZipFile('{}/{}'.format(os.getcwd(),'chromedriver_mac64.zip'), 'r') as zip_ref:
+                zip_ref.extractall('{}'.format(os.getcwd()))
         except:
-            print('Download failed. Please try again or access             https://sites.google.com/a/chromium.org/chromedriver/downloads             to download it manually.')
+            print('Download failed. Please try again or access \
+            https://sites.google.com/a/chromium.org/chromedriver/downloads \
+            to download it manually.')
     
-    elif platform.lower() == 'windows':
+    elif platform.lower().startswith('win'):
         try:
             request.urlretrieve(url.format(version2down,'win32'), filename='chromedriver_win32.zip')
             print('chromedriver downloaded at {}'.format(path))
-            print('Please unzip it before continuing.')
+            
+            with zipfile.ZipFile('{}/{}'.format(os.getcwd(),'chromedriver_win32.zip'), 'r') as zip_ref:
+                zip_ref.extractall('{}'.format(os.getcwd()))
         except:
-            print('Download failed. Please try again or access             https://sites.google.com/a/chromium.org/chromedriver/downloads             to download it manually.')
-
+            print('Download failed. Please try again or access \
+            https://sites.google.com/a/chromium.org/chromedriver/downloads \
+            to download it manually.')
 
 # In[25]:
 
@@ -211,7 +230,7 @@ def scrape(author, path_to_driver = os.getcwd()):
 
 
         # scrolling and loading more
-        SCROLL_PAUSE_TIME = 0.5
+        SCROLL_PAUSE_TIME = 0.3
 
         # Altura do scroll
         last_height = driver.execute_script("return document.body.scrollHeight")

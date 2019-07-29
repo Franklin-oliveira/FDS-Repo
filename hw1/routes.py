@@ -1,30 +1,70 @@
-import urllib.parse
+import os
+import sys
+import zipfile
 import pandas as pd
 import networkx as nx
 import altair as alt
+import urllib.parse
+import urllib.request as request
+
 import matplotlib.pyplot as plt
 
 from flask import Flask, render_template, request, Markup
-from scrape_scholar import scrape, find_papers_and_authors
+from scrape_scholar import scrape, find_papers_and_authors, get_chrome_version, download_chrome_driver
 from database_and_graphics import createDB, updateDB, queryDB, to_pandas_edges, to_pandas_nodes
 
+# checking chromedriver
+path = os.getcwd()
+file_names = os.listdir(path)
+
+# getting driver_name
+if sys.platform.lower().startswith('win'):
+    driver_name = 'chromedriver.exe'
+else:
+    driver_name = 'chromedriver'
+
+
+# checking if there's already a version of chromedriver on the current directory
+if driver_name not in file_names:
+    # trying to get chromedriver automatically
+    try:
+        chromeVersion = get_chrome_version()
+        download_chrome_driver(sys.platform,chromeVersion[1])
+    except:
+        print('Could not download chromedriver automatically.') 
+        print('\nPlease access \
+                https://sites.google.com/a/chromium.org/chromedriver/downloads \
+                to download it manually. ')
+        print('\nDo not forget to unzip and place it at {}'.format(path))
+
+else:
+    print("There's already a version of chromedriver at {} \n".format(path))
+
+
+# initializing flask
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
+# search_log
 log = []
-  
+
+# Home  
 @app.route('/')
 def home():
     # limpar também a base de dados
     createDB()
+    log = []
+
     return render_template('index.html')
-  
+
+
+# About 
 @app.route('/about')
 def about():
     return render_template('about.html')
 
 
-
+# Scrape (collects data)
 @app.route("/scrape", methods=["get", "post"])
 def search():
     author = request.form['author'] # define o autor pesquisado
@@ -69,7 +109,7 @@ def search():
 
 
 
-# Cria os gráficos
+# Scrape (cria os gráficos)
 @app.route("/scrape/graph")
 def create_graph():
     # retira o número máximo de linhas para pot com Altair
@@ -86,6 +126,8 @@ def create_graph():
     ### renderiza os gráficos
     
     ## Grafo 1 - Autores (authors)
+    
+    print('Preparando grafo dos autores...')
     graph = nx.Graph()
     
     # dataframe com colunas: paper e [lista_autores]
@@ -114,6 +156,7 @@ def create_graph():
     
     
     # Gráfico 1
+    print('Criando interatividade com o Altair (autores) ...')
     
     selector = alt.selection_single(empty='all',fields=['ID_author']) # iniciando seletor
     
@@ -143,12 +186,14 @@ def create_graph():
     chart = alt.LayerChart(layer=(lines,bk+points)).properties(
                 height=350,
                 width=450
-                )
+                ).interactive()
     
     
     
     
     ## Grafo 2 - Artigos (papers)
+    print('Preparando grafo dos artigos...')
+
     graph1 = nx.Graph()
     group1 = pd.DataFrame(author_paper.groupby('ID_author')['ID_paper'].apply(list))
     
@@ -174,7 +219,8 @@ def create_graph():
     
     
     # Gráfico 2
-    
+    print('Criando interatividade com o Altair (artigos)...')
+
     points1 = alt.Chart(nodes1).add_selection(selector).mark_point(filled=True,size=90).encode(
                 alt.X('x', axis=alt.Axis(title='')),
                 alt.Y('y', axis=alt.Axis(title='')),
@@ -201,7 +247,7 @@ def create_graph():
     chart1 = alt.LayerChart(layer=(lines1,bk1 + points1)).properties(
                 height=350,
                 width=450
-                )
+                ).interactive()
 
     
     
