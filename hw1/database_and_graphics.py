@@ -8,16 +8,16 @@ import networkx as nx
 def createDB():
     # código para criar as tabelas 
     structure = '''
-    DROP TABLE IF EXISTS "author";
     DROP TABLE IF EXISTS "paper";
+    DROP TABLE IF EXISTS "author";
     DROP TABLE IF EXISTS "author_paper";
-    CREATE TABLE "author" (
-        "id" INTEGER PRIMARY KEY  NOT NULL ,
-        "name" VARCHAR NOT NULL UNIQUE
-    );
     CREATE TABLE "paper" (
         "id" INTEGER PRIMARY KEY  NOT NULL ,
         "title" VARCHAR NOT NULL UNIQUE
+    );
+    CREATE TABLE "author" ( 
+        "id" INTEGER PRIMARY KEY  NOT NULL ,
+        "name" VARCHAR NOT NULL UNIQUE
     );
     CREATE TABLE "author_paper" (
         id_paper VARCHAR,
@@ -27,7 +27,6 @@ def createDB():
     );
     '''
     
-    # criando o arquivo .db
     connect = sqlite3.connect('hw1.sqlite',timeout=10)
     cursor = connect.cursor()
     cursor.executescript(structure)
@@ -38,24 +37,16 @@ def createDB():
 # Atualiza a base de dados    
 def updateDB(titulos,autores, flat_df):
     # adicionando autores
-    add_autor = '''
-    INSERT OR IGNORE INTO author (name) VALUES (?);
-    '''
-
-    connect = sqlite3.connect('hw1.sqlite',timeout=10)
+    connect = sqlite3.connect('hw1.sqlite',timeout=15)
     for autor in autores:
-        connect.execute(add_autor, [autor])
+        connect.execute("""INSERT OR IGNORE INTO author (name) VALUES ("{}");""".format(autor))
     connect.commit()
     connect.close()
     
     # adicionando artigos
-    add_titulo = '''
-    INSERT OR IGNORE INTO paper (title) VALUES (?);
-    '''
-
-    connect = sqlite3.connect('hw1.sqlite',timeout=10)
+    connect = sqlite3.connect('hw1.sqlite', timeout=15)
     for titulo in titulos:
-        connect.execute(add_titulo,[titulo])
+        connect.execute("""INSERT OR IGNORE INTO paper (title) VALUES ("{}");""".format(titulo))
     connect.commit()
     connect.close()
     
@@ -68,10 +59,10 @@ def updateDB(titulos,autores, flat_df):
 
     for autor in autores_table:
         autores.append(autor)
-
     connect.close()
 
     autores = pd.DataFrame(autores, columns=['ID_author','author'])
+    
     
     # coletando os IDs: Artigos
     connect = sqlite3.connect('hw1.sqlite',timeout=10)
@@ -81,27 +72,24 @@ def updateDB(titulos,autores, flat_df):
 
     for artigo in artigos_table:
         artigos.append(artigo)
-
     connect.close()
 
     artigos = pd.DataFrame(artigos, columns=['ID_paper','paper'])
-    artigos.head(2)
     
 
     autores_e_artigos = pd.merge(flat_df,artigos,on='paper')  # adicionando coluna de ID_Artigo
     autores_e_artigos = pd.merge(autores_e_artigos,autores,on='author') # adicionando coluna ID_Autor
     
     # adicionando IDs dos autores e dos artigos
-    add_autor_e_artigo ='''
-    INSERT INTO author_paper (id_paper, id_author) VALUES (?,?);
-    '''
-
-    connect = sqlite3.connect('hw1.sqlite',timeout=10)
+    connect = sqlite3.connect('hw1.sqlite',timeout=15)
     for ID,obs in autores_e_artigos.iterrows():
-        connect.execute(add_autor_e_artigo,[obs['ID_paper'],obs['ID_author']])
+        connect.execute("""
+        INSERT INTO author_paper (id_paper, id_author) VALUES ({},{});
+        """.format(obs['ID_paper'],obs['ID_author']))
     connect.commit()
     connect.close()
-    
+
+
     
 # query all info in a table
 def queryDB(table, columns):

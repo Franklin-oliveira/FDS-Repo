@@ -105,7 +105,8 @@ def create_graph():
     nodes = to_pandas_nodes(graph,pos)
     nodes.reset_index(inplace=True)
     nodes.rename(columns={'index':'ID_author'}, inplace=True)
-    nodes = pd.merge(nodes,autores,on='ID_author')
+    nodes = pd.merge(nodes,autores,on='ID_author')  # coletando nome dos autores
+    nodes = pd.merge(nodes,author_paper, on='ID_author')  # coletando ID_paper
     
     # coletando edges
     edges = to_pandas_edges(graph,pos)
@@ -114,22 +115,33 @@ def create_graph():
     
     # Gráfico 1
     
-    points = alt.Chart(nodes).mark_point(color='lightseagreen', fill='lightseagreen',size=50).encode(
+    selector = alt.selection_single(empty='all',fields=['ID_author']) # iniciando seletor
+    
+    points = alt.Chart(nodes).add_selection(selector).mark_point(filled=True,size=90).encode(
                 alt.X('x', axis=alt.Axis(title='')),
                 alt.Y('y', axis=alt.Axis(title='')),
                 tooltip='author',
-                opacity=alt.value(0.6)
-            )
+                opacity=alt.condition(selector,alt.value(0.95),alt.value(0.4),legend=None),
+                color=alt.condition(selector, 'ID_author', alt.value('lightgray'), legend=None)
+            ).properties( selection=selector ).transform_filter(selector)
+
+    # cria um background para efeitos de transição do seletor
+    bk = alt.Chart(nodes).mark_point(color='lightgray',filled=True,size=90).encode(
+                alt.X('x', axis=alt.Axis(title='')),
+                alt.Y('y', axis=alt.Axis(title='')),
+                tooltip='author',
+                opacity=alt.value(0.4),
+    )
 
     lines = alt.Chart(edges).mark_line(color='salmon').encode(
                 alt.X('x', axis=alt.Axis(title='')),
                 alt.Y('y', axis=alt.Axis(title='')),
                 detail='edge',
-                opacity=alt.value(0.2)
+                opacity=alt.value(0.15)
             )
 
-    chart = alt.LayerChart(layer=(lines,points)).properties(
-                height=300,
+    chart = alt.LayerChart(layer=(lines,bk+points)).properties(
+                height=350,
                 width=450
                 )
     
@@ -153,7 +165,8 @@ def create_graph():
     nodes1 = to_pandas_nodes(graph1, pos1)
     nodes1.reset_index(inplace=True)
     nodes1.rename(columns={'index':'ID_paper'}, inplace=True)
-    nodes1 = pd.merge(nodes1,artigos,on='ID_paper')
+    nodes1 = pd.merge(nodes1,artigos,on='ID_paper')  # coletando nome dos papers
+    nodes1 = pd.merge(nodes1,author_paper,on='ID_paper')  # coletando ID_author
     
     # coletando edges
     edges1 = to_pandas_edges(graph1,pos1)
@@ -162,25 +175,34 @@ def create_graph():
     
     # Gráfico 2
     
-    points1 = alt.Chart(nodes1).mark_point(color='coral', fill='coral',size=50).encode(
+    points1 = alt.Chart(nodes1).add_selection(selector).mark_point(filled=True,size=90).encode(
                 alt.X('x', axis=alt.Axis(title='')),
                 alt.Y('y', axis=alt.Axis(title='')),
                 tooltip='paper',
-                opacity=alt.value(0.6)
-            )
+                opacity=alt.condition(selector,alt.value(0.95),alt.value(0.4),legend=None),
+                color=alt.condition(selector, 'ID_author', alt.value('lightgray'), legend=None)
+    ).transform_filter(selector)
 
-    lines1 = alt.Chart(edges1).mark_line(color='lightblue', style='--').encode(
+    # cria um background para efeitos de transição do seletor
+    bk1 = alt.Chart(nodes1).mark_point(color='lightgray',filled=True,size=90).encode(
+                alt.X('x', axis=alt.Axis(title='')),
+                alt.Y('y', axis=alt.Axis(title='')),
+                tooltip='paper',
+                opacity=alt.value(0.4),
+    )
+
+    lines1 = alt.Chart(edges1).mark_line(color='lightblue').encode(
                 alt.X('x', axis=alt.Axis(title='')),
                 alt.Y('y', axis=alt.Axis(title='')),
                 detail='edge',
                 opacity=alt.value(0.2)
-            )
+    )
 
-
-    chart1 = alt.LayerChart(layer=(lines1,points1)).properties(
-                height=300,
+    chart1 = alt.LayerChart(layer=(lines1,bk1 + points1)).properties(
+                height=350,
                 width=450
                 )
+
     
     
     ### Concatenando horizontamnete os gráficos 1 e 2
