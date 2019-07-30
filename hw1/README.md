@@ -138,8 +138,6 @@ A partir desse ponto, é só pesquisar o nome do autor e aguardar até que os gr
 
 ----------------
 
-## Nota
-
-Esse projeto foi apresentado como solução de um *homework* para a disciplina de Fundamentos de Data Sciente do curso de Mestrado em Matemática Aplicada - EMAp/FGV. Quaisquer comentários, sugestões e notificações são bem-vindos.
+**Nota:** Quaisquer comentários, críticas ou sugestões são bem-vindos. 
 
 ----------------
