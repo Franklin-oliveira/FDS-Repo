@@ -52,7 +52,7 @@ Todos os *scripts* e códigos apresentados aqui foram desenvolvidos utilizando u
 Se você não está usando uma distribuição do Anaconda, também será necessário fazer a instalação das seguintes bibliotecas:
 
 
-> os  -  time  -  sys  -  time  -  urllib  -  zipfile (opcional)  -  pandas  -  matplotlib
+> os  -  sys  -  time  -  urllib  -  zipfile (opcional)  -  pandas  -  matplotlib
 <br>
 
 Cada uma dessas bibliotecas pode ser instalada executando o seguinte comando em um terminal (obs: no Windows, o mesmo comando deve ser executado no Anaconda Prompt):
